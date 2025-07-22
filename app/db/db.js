@@ -35,6 +35,9 @@ function connect() {
         database: config.db.database,
         dateStrings: true,
     });
+
+    connection.escape = mysql.escape;
+    
     return connection;
 }
 
