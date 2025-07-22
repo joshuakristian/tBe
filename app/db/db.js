@@ -36,8 +36,6 @@ function connect() {
         dateStrings: true,
     });
 
-    connection.escape = mysql.escape;
-    
     return connection;
 }
 
@@ -47,6 +45,7 @@ function disconnect(connection) {
 
 module.exports = {
     connect,
-    disconnect
+    disconnect,
+    escape: mysql.escape 
 };
 
