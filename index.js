@@ -13,7 +13,9 @@ app.use(cors({
   credentials: true,
 }));
 
-app.options('*', cors());
+app.options('*', (req, res) => {
+  res.sendStatus(200);
+});
 
 app.use(bodyParser.json());
 app.use(bodyParser.json({ type: 'application/*+json' }));
@@ -25,7 +27,6 @@ app.use(express.static(path.join(__dirname, 'assets')));
 
 const router = require('./app/Route.js');
 app.use('/api', router);
-
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Not Found' });
