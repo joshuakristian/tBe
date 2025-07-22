@@ -1,29 +1,33 @@
-const express = require('express')
-const cors = require('cors')
-const bodyParser = require('body-parser')
-const path = require('path')
-const app = express()
-require('dotenv').config()
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const path = require('path');
+require('dotenv').config();
 
-app.use(
-  cors({
-    origin: ['http://localhost:7050', 'https://untarx.com'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-  }),
-)
+const app = express();
 
-const router = require('./app/Route.js')
-app.use(bodyParser.json())
-app.use(bodyParser.json({ type: 'application/*+json' }))
-app.use(bodyParser.urlencoded({ extended: true }))
-app.use(express.json())
-app.use(express.urlencoded({ extended: false }))
-app.use(express.static(path.join(__dirname, 'assets')))
-app.use('/api', router)
+app.use(cors({
+  origin: ['http://localhost:7050', 'https://untarx.com'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}));
 
-const PORT = process.env.PORT
+app.use(bodyParser.json());
+app.use(bodyParser.json({ type: 'application/*+json' }));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.static(path.join(__dirname, 'assets')));
+
+const router = require('./app/Route.js');
+app.use('/api', router);
+
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not Found' });
+});
+
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
-  console.log(`Server berjalan di port ${PORT}`)
-})
+  console.log(`Server berjalan di port ${PORT}`);
+});
