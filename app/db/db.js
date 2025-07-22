@@ -27,29 +27,7 @@ try {
   process.exit(0);
 }
 
-function connect() {
-  const connection = mysql.createConnection(config.db);
-  return connection;
-}
+const connection = mysql.createConnection(config.db);
 
-function disconnect(connection) {
-  connection.end();
-}
-
-async function query(sql, params = []) {
-  const connection = connect();
-  try {
-    const [rows] = await connection.promise().query(sql, params);
-    return rows;
-  } finally {
-    disconnect(connection);
-  }
-}
-
-module.exports = {
-  connect,
-  disconnect,
-  query,
-  escape: mysql.escape
-};
+module.exports = connection
 
