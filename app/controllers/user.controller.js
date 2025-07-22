@@ -387,9 +387,6 @@ function getAccessMenus(id) {
 exports.testapi = async (req, res, next) => {
   res.send('wak haji doyok')
 }
-exports.ping = async (req, res, next) => {
-  res.send('NGETEST PING BANG EKO')
-}
 
 exports.changePassword = async (req, res) => {
   const { old_password, new_password } = req.body

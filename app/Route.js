@@ -2,18 +2,17 @@ const express = require('express')
 const router = express.Router()
 const upMidware = require('./middleware/upload.js')
 
-//test
-router.get('/ping', users.testapi)
-router.get('/testapi', users.testapi)
-
 //users
 const users = require('./controllers/user.controller.js')
 const userMiddleware = require('./middleware/users.js')
+
+router.get('/testapi', users.testapi)
 router.get('/getuserss', users.getusers)
 router.get('/getusers', userMiddleware.validateLogin, users.getusers)
 router.get('/getuser/:id', userMiddleware.validateLogin, users.getuser)
 router.post('/signup', userMiddleware.validateRegister, users.signup)
 router.post('/login', users.login)
+router.get('/testapi', userMiddleware.validateLogin, users.testapi)
 router.put('/upict/:id', userMiddleware.validateLogin, upMidware, users.upict)
 router.patch(
   '/chpw/:id',
@@ -26,7 +25,6 @@ router.patch(
 const event = require('./controllers/event.controller.js')
 router.get('/gevtss', event.getevents)
 router.get('/gevts', userMiddleware.validateLogin, event.getevents)
-router.get('/gevtsAdm', userMiddleware.validateLogin, event.getEventsByRole)
 router.get('/gevt/:id', userMiddleware.validateLogin, event.getevent)
 router.post(
   '/ievt',

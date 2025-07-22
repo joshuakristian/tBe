@@ -60,7 +60,7 @@ exports.getevents = async (req, res, next) => {
 
 exports.getevent = async (req,res,next) => {
   const userId = req.params.id;
-  const query = 'SELECT id,namaEvent, penyelenggara, lokasi, deskripsi, tgl_m,tgl_a, jam_m, jam_a,link,image.formId FROM event WHERE id = ?';
+  const query = 'SELECT id,namaEvent, penyelenggara, lokasi, deskripsi, tgl_m,tgl_a, jam_m, jam_a,link,image,formId FROM event WHERE id = ?';
   db.query(query, [userId], (err, results) => {
     if (err) {
       return res.status(500).json({
@@ -78,7 +78,7 @@ exports.getevent = async (req,res,next) => {
     const event = results[0];
     return res.status(200).json({
       status: true,
-      message: 'Data pengguna berhasil ditemukan',
+      message: 'Data event berhasil ditemukan',
       event 
     });
   });
@@ -165,7 +165,7 @@ exports.uEvent = async (req, res, next) => {
     
     let query = '';
     let params = [];
-    if (req.files && req.files.deals){
+    if (req.files && req.files.event){
     let Url = req.files.event ? `/pic/${req.files.event[0].filename}` : null;
     query = `UPDATE event SET namaEvent = ?, penyelenggara = ?,  lokasi = ?, deskripsi = ?, tgl_m = ? ,tgl_a = ?,jam_m = ? ,jam_a = ?, link = ?, image = ? WHERE id = ?`
     params = [
