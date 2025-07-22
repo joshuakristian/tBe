@@ -38,5 +38,6 @@ function disconnect(connection) {
 
 module.exports = {
     connect,
-    disconnect
+    disconnect,
+    escape: mysql.escape
 }
