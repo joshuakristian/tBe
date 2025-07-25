@@ -128,7 +128,7 @@ exports.signup = async (req, res, next) => {
               message: err,
             })
           } else {
-            const userQuery = `INSERT INTO users (nim, fakultas, prodi, first_name, last_name, email, role_id, password, image, registered, verify) VALUES (?,?, ?,?, ?, ?, 5, ?, '/pp/default.jpg',now())`
+            const userQuery = `INSERT INTO users (nim, fakultas, prodi, first_name, last_name, email, role_id, password, image, registered, verify) VALUES (?,?, ?,?, ?, ?, 5, ?, '/pp/default.jpg',now(), ?)`
             const userValues = [
               nim,
               fakultas,
