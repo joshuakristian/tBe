@@ -12,6 +12,7 @@ router.get('/getusers', userMiddleware.validateLogin, users.getusers)
 router.get('/getuser/:id', userMiddleware.validateLogin, users.getuser)
 router.post('/signup', userMiddleware.validateRegister, users.signup)
 router.post('/login', users.login)
+// router.post('/log-in', users.logins)
 router.get('/testapi', userMiddleware.validateLogin, users.testapi)
 router.put('/upict/:id', userMiddleware.validateLogin, upMidware, users.upict)
 router.patch(
@@ -148,7 +149,7 @@ router.delete('/dint/:id', userMiddleware.validateLogin, intern.delIntern)
 // QOTD
 const qotd = require('./controllers/qotd.controller.js')
 router.get('/gqotd', userMiddleware.validateLogin, qotd.getQotd)
-router.get('/gmotd', userMiddleware.validateLogin, qotd.getMotd)
+router.get('/gqm', userMiddleware.validateLogin, qotd.getQm)
 
 //Kupon
 const kpn = require('./controllers/kupon.controller.js')
@@ -163,4 +164,8 @@ router.get('/gabm/:uid', userMiddleware.validateLogin, bm.gABm)
 router.post('/ibm/:uid/:iid', userMiddleware.validateLogin, bm.iBmk)
 router.delete('/dbm/:id', userMiddleware.validateLogin, bm.delBmk)
 
+//mail
+const m = require('./controllers/mail.controller.js')
+router.post('/sotp', m.sendOtp);
+router.post('/votp', m.verifyOtp);
 module.exports = router

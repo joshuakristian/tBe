@@ -2,7 +2,7 @@ const cors = require('cors')
 const db = require('../db/db.js')
 
 exports.getQotd = async (req, res, next) => {
-  const query = 'SELECT * FROM qotd'
+  const query = 'SELECT * FROM qotd ORDER BY RAND() LIMIT 1'
   db.query(query, (err, results) => {
     if (err) {
       return res.status(500).json({
@@ -17,7 +17,7 @@ exports.getQotd = async (req, res, next) => {
         message: 'Cannot Quote Data',
       })
     }
-    const QOTD = results
+    const QOTD = results[0];
     return res.status(200).json({
       status: true,
       message: 'Quote Found',
@@ -26,8 +26,8 @@ exports.getQotd = async (req, res, next) => {
   })
 }
 
-exports.getMotd = async (req, res, next) => {
-  const query = 'SELECT * FROM motd'
+exports.getQm = async (req, res, next) => {
+  const query = 'SELECT * FROM qm WHERE'
   db.query(query, (err, results) => {
     if (err) {
       return res.status(500).json({
@@ -42,11 +42,11 @@ exports.getMotd = async (req, res, next) => {
         message: 'Cannot Quote Data',
       })
     }
-    const QOTD = results
+    const Qm = results
     return res.status(200).json({
       status: true,
       message: 'Quote Found',
-      data : QOTD,
+      data : Qm,
     })
   })
 }
