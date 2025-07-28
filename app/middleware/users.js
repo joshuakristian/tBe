@@ -48,18 +48,30 @@ function validatePw(req, res, next) {
 
 function rpw(req, res, next) {
   const schema = Joi.object({
-    new_password: Joi.string()
+    token: Joi.string().required().messages({
+      'string.empty': 'Token is required',
+    }),
+    newPassword: Joi.string()
       .required()
       .min(6)
       .pattern(new RegExp('^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*,./])'))
       .messages({
         'string.pattern.base':
           'Password must contain at least one uppercase letter, one number, and one special character !@#$%^&*,./',
+        'string.empty': 'New password is required',
       }),
-    new_password_repeat: Joi.string().valid(Joi.ref('new_password')).required(),
-  })
-  validateRequest(req, res, next, schema)
+    newPasswordRepeat: Joi.string()
+      .valid(Joi.ref('newPassword'))
+      .required()
+      .messages({
+        'any.only': 'New password repeat must match new password',
+        'string.empty': 'New password repeat is required',
+      }),
+  });
+
+  validateRequest(req, res, next, schema);
 }
+
 
 function isLogin(req, res, next) {
   // console.log(req.headers.authorization)

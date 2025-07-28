@@ -163,7 +163,7 @@ exports.requestResetPassword = (req, res) => {
 
     try {
       await transporter.sendMail({
-        from: `"Your App" <${config.mail.user}>`,
+        from: `"UntarX" <${config.mail.user}>`,
         to: email,
         subject: "Reset Your Password",
         html: `
@@ -173,15 +173,17 @@ exports.requestResetPassword = (req, res) => {
             <p>You have requested to reset your password. Click the button below to proceed:</p>
             <div style="text-align: center; margin: 30px 0;">
               <a href="${resetLink}" 
-                 style="background: #007bff; color: white; padding: 12px 24px; 
+                style="background-color: #007bff; color: #fff; padding: 12px 24px; 
                         text-decoration: none; border-radius: 6px; display: inline-block;">
                 Reset Password
               </a>
             </div>
+            <p>If the button above doesn't work, copy and paste this link into your browser:</p>
+            <p><a href="${resetLink}" style="color: #007bff;">${resetLink}</a></p>
             <p><strong>This link will expire in 10 minutes.</strong></p>
             <p>If you didn't request this, please ignore this email.</p>
           </div>
-        `,
+        `
       });
 
       res.status(200).json({ message: "Reset link sent successfully" });
@@ -193,10 +195,14 @@ exports.requestResetPassword = (req, res) => {
 };
 
 exports.rpw = async (req, res) => {
-  const { token, newPassword } = req.body;
-  
+  const { token, newPassword, newPasswordRepeat } = req.body;
+    
   if (!token || !newPassword) {
     return res.status(400).json({ error: "Token and password are required" });
+  }
+
+  if (newPassword !== newPasswordRepeat) {
+    return res.status(400).json({ error: "Passwords do not match" });
   }
 
   try {
@@ -242,3 +248,34 @@ exports.rpw = async (req, res) => {
     res.status(500).json({ error: "Failed to reset password" });
   }
 };
+
+exports.getResetPassword = (req, res) => {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).send("Invalid or missing reset token.");
+    }
+
+  res.send(`
+    <html>
+      <head>
+        <title>Reset Password</title>
+        <style>
+          body { font-family: Arial; padding: 40px; background: #f4f4f4; }
+          form { background: white; padding: 20px; max-width: 400px; margin: auto; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+          input, button { width: 100%; padding: 10px; margin-top: 10px; border-radius: 4px; border: 1px solid #ccc; }
+        </style>
+      </head>
+      <body>
+        <form method="POST" action="/api/reset-password">
+          <input type="hidden" name="token" value="${token}" />
+          <h2>Reset Your Password</h2>
+            <input type="password" name="newPassword" placeholder="New Password" required />
+            <input type="password" name="newPasswordRepeat" placeholder="Repeat Password" required />
+          <button type="submit">Reset Password</button>
+        </form>
+      </body>
+    </html>
+  `);
+  };
+

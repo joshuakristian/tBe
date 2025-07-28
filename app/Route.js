@@ -170,4 +170,5 @@ router.post('/sotp', m.sendOtp);
 router.post('/votp', m.verifyOtp);
 router.post('/rss', userMiddleware.validateRss, m.requestResetPassword);
 router.post('/reset-password', userMiddleware.validateRPw, m.rpw);
+router.get('/reset-password', m.getResetPassword);
 module.exports = router
