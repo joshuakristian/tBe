@@ -2,9 +2,8 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const db = require('../db/db.js')
 const moment = require('moment')
-const randtoken = require('rand-token')
-const mail = require('../module/mail.js')
-const { verify } = require('crypto')
+require('dotenv').config()
+const env = process.env
 
 async function GetPageCount() {
   return new Promise((resolve) => {
@@ -258,132 +257,142 @@ exports.signup = async (req, res, next) => {
 //   )
 // }
 
-exports.login = async (req, res, next) => {
-  const { email, password } = req.body;
+exports.login = (req, res, next) => {
+  db.query(
+    `SELECT id, nim, role_id, email, password, failed_attempts, last_failed_login,verify FROM users WHERE email = ${db.escape(req.body.email)};`,
+    (errA, result) => {
+      if (errA) {
+        return res.status(400).send({ status: false, message: errA });
+      }
 
-  try {
-    const [users] = await db.query(
-      `SELECT id, nim, role_id, email, password, failed_attempts, last_failed_login,verify
-       FROM users 
-       WHERE email = ?`,
-      [email]
-    );
+      if (!result.length) {
+        return res.status(400).send({ status: false, message: 'email incorrect' });
+      }
 
-    if (!users.email.length) {
-      return res.status(400).send({ status: false, message: 'Email tidak ditemukan' });
-    }
+      const user = result[0];
+      const now = moment();
+      const lastFailed = moment(user.last_failed_login);
+      const attempts = user.failed_attempts;
 
-    const user = users;
-    const now = moment();
-    const lastFailed = moment(user.last_failed_login);
-    const attempts = user.failed_attempts;
-
-    if (!user.is_verified) {
+      if (!user.is_verified) {
       return res.status(403).send({
         status: false,
         message: 'Please verify your email before logging in.',
       });
     }
 
-    if (attempts >= 5) {
-      const waitTime = 5 * Math.floor(attempts / 5);
-      const unlockTime = lastFailed.add(waitTime, 'minutes');
-      if (now.isBefore(unlockTime)) {
-        const remaining = unlockTime.diff(now, 'minutes');
-        return res.status(403).send({
-          status: false,
-          message: `Terlalu banyak percobaan gagal. Coba lagi dalam ${remaining} menit.`,
-        });
+      if (attempts >= 5) {
+        const waitTime = 5 * Math.floor(attempts / 5);
+        const unlockTime = lastFailed.add(waitTime, 'minutes');
+        if (now.isBefore(unlockTime)) {
+          const remaining = unlockTime.diff(now, 'minutes');
+          return res.status(403).send({
+            status: false,
+            message: `Too many failed attempts. Please try again in ${remaining} minute(s).`,
+          });
+        }
       }
-    }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      await db.query(
-        `UPDATE users SET failed_attempts = failed_attempts + 1, last_failed_login = NOW() WHERE id = ?`,
-        [user.id]
-      );
-      return res.status(400).send({
-        status: false,
-        message: 'Password salah',
+      bcrypt.compare(req.body.password, user.password, async (bErr, bResult) => {
+        if (bErr || !bResult) {
+          db.query(
+            `UPDATE users SET failed_attempts = failed_attempts + 1, last_failed_login = NOW() WHERE id = ?`,
+            [user.id]
+          );
+          return res.status(400).send({
+            status: false,
+            message: 'Password incorrect',
+          });
+        }
+
+        db.query(
+          `UPDATE users SET failed_attempts = 0, last_failed_login = NULL WHERE id = ?`,
+          [user.id]
+        );
+
+        const token = jwt.sign(
+          {
+            email: user.email,
+            userId: user.id,
+            role: user.role_id,
+          },
+          env.JWT_Sect,
+          { expiresIn: '1 days' }
+        );
+
+        db.query(
+          `SELECT u.id, nim,first_name, last_name ,email, role_id, namarole.nama AS rolename 
+           FROM users u 
+           JOIN namarole ON u.role_id = namarole.id 
+           WHERE u.id = '${user.id}' 
+           GROUP BY u.id`,
+          async (err, resultC) => {
+            if (err) {
+              return res.status(400).send({ status: false, message: err });
+            }
+
+            if (['1', '2', '3', '4', '5'].includes(resultC[0].role_id.toString())) {
+              let Akses = await getAccess(resultC[0].role_id);
+              let AksesProfil = await getAccessMenus(resultC[0].role_id);
+
+              res.status(200).send({
+                status: true,
+                message: `Logged in as ${resultC[0].rolename}!`,
+                token: `${resultC[0].role_id} ${token}`,
+                users: {
+                  id: resultC[0].id,
+                  nim: resultC[0].nim,
+                  nama: resultC[0].first_name + ' ' + resultC[0].last_name,
+                  email: resultC[0].email,
+                  role_id: resultC[0].role_id,
+                  role: resultC[0].rolename,
+                },
+                Akses,
+                AksesProfil,
+              });
+            } else {
+              return res.status(500).send({
+                status: false,
+                message: 'Status on account is abnormal, please report this issue to the staff',
+              });
+            }
+          }
+        );
       });
     }
-
-    await db.query(
-      `UPDATE users SET failed_attempts = 0, last_failed_login = NULL WHERE id = ?`,
-      [user.id]
-    );
-
-    const token = jwt.sign(
-      {
-        email: user.email,
-        userId: user.id,
-        role: user.role_id,
-      },
-      'SECRETKEY',
-      { expiresIn: '1d' }
-    );
-
-    const [userDataRows] = await db.query(
-      `SELECT u.id, u.nim, u.first_name, u.last_name, u.email, u.role_id, nr.nama AS rolename 
-       FROM users u 
-       JOIN namarole nr ON u.role_id = nr.id 
-       WHERE u.id = ?`,
-      [user.id]
-    );
-    
-    const userData = userDataRows;
-
-    if (!['1', '2', '3', '4', '5'].includes(userData.role_id.toString())) {
-      return res.status(500).send({
-        status: false,
-        message: 'Status akun tidak normal, harap hubungi staff.',
-      });
-    }
-
-    const Akses = await getAccess(userData.role_id);
-    const AksesProfil = await getAccessMenus(userData.role_id);
-
-    return res.status(200).send({
-      status: true,
-      message: `Berhasil login sebagai ${userData.rolename}!`,
-      token: `${userData.role_id} ${token}`,
-      users: {
-        id: userData.id,
-        nim: userData.nim,
-        nama: `${userData.first_name} ${userData.last_name}`,
-        email: userData.email,
-        role_id: userData.role_id,
-        role: userData.rolename,
-      },
-      Akses,
-      AksesProfil,
-    });
-
-  } catch (err) {
-    console.error('Login error:', err);
-    return res.status(500).send({ status: false, message: 'Terjadi kesalahan pada server.' });
-  }
+  );
 };
 
-function getAccess(roleId) {
-  return db.query(
-    `SELECT menu_id, m.nama AS menu, m.url AS url, ijin 
-     FROM akses a 
-     JOIN menu m ON a.menu_id = m.id 
-     WHERE role_id = ?`,
-    [roleId]
-  ).then(([rows]) => rows).catch(() => []);
+function getAccess(id) {
+  return new Promise((resolve) => {
+    db.query(
+      `SELECT menu_id, m.nama AS menu, m.url AS url,ijin FROM akses a JOIN menu m ON a.menu_id = m.id WHERE role_id = '${id}'`,
+      (err, result) => {
+        if (err) {
+          resolve([])
+          return
+        }
+        let k = resolve(result)
+      },
+    )
+  })
 }
 
-function getAccessMenus(roleId) {
-  return db.query(
-    `SELECT menus_id, m.nama AS menus, ijin 
-     FROM aksesprofil a 
-     JOIN menus m ON a.menus_id = m.id 
-     WHERE role_id = ?`,
-    [roleId]
-  ).then(([rows]) => rows).catch(() => []);
+function getAccessMenus(id) {
+  return new Promise((resolve) => {
+    db.query(
+      `SELECT menus_id, m.nama AS menus, ijin FROM aksesprofil a JOIN menus m ON a.menus_id = m.id WHERE role_id = '${id}'`,
+      (err, result) => {
+        if (err) {
+          resolve([])
+          return
+        }
+        let k = resolve(result)
+
+        // resolve(JSON.stringify(result).split(","))
+      },
+    )
+  })
 }
 
 exports.testapi = async (req, res, next) => {
