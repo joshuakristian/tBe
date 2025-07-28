@@ -159,7 +159,7 @@ exports.requestResetPassword = (req, res) => {
       return res.status(500).json({ error: "Failed to generate reset link" });
     }
 
-    const resetLink = `${process.env.URL}/reset-password?token=${encodeURIComponent(encryptedToken)}`;
+    const resetLink = `${process.env.URL}/api/reset-password?token=${encodeURIComponent(encryptedToken)}`;
 
     try {
       await transporter.sendMail({
