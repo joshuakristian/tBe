@@ -192,7 +192,7 @@ exports.requestResetPassword = (req, res) => {
   });
 };
 
-exports.resetPassword = async (req, res) => {
+exports.rpw = async (req, res) => {
   const { token, newPassword } = req.body;
   
   if (!token || !newPassword) {

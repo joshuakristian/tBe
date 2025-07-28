@@ -39,6 +39,21 @@ function validatePw(req, res, next) {
   validateRequest(req, res, next, schema)
 }
 
+function rpw(req, res, next) {
+  const schema = Joi.object({
+    new_password: Joi.string()
+      .required()
+      .min(6)
+      .pattern(new RegExp('^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*,./])'))
+      .messages({
+        'string.pattern.base':
+          'Password must contain at least one uppercase letter, one number, and one special character !@#$%^&*,./',
+      }),
+    new_password_repeat: Joi.string().valid(Joi.ref('new_password')).required(),
+  })
+  validateRequest(req, res, next, schema)
+}
+
 function isLogin(req, res, next) {
   // console.log(req.headers.authorization)
   if (!req.headers.authorization) {
@@ -193,6 +208,7 @@ module.exports.validateNR = validateNR
 module.exports.validateRegister = validateRegister
 module.exports.validateLogin = isLogin
 module.exports.validatePw = validatePw
+module.exports.validateRPw = rpw
 module.exports.validateNEvent = validateNE
 module.exports.validateNF = validateNForm
 module.exports.validateNDeals = validateND

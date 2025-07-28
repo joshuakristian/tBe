@@ -169,5 +169,5 @@ const m = require('./controllers/mail.controller.js')
 router.post('/sotp', m.sendOtp);
 router.post('/votp', m.verifyOtp);
 router.post('/rss', m.requestResetPassword);
-router.post('/reset-password', m.resetPassword);
+router.post('/reset-password', userMiddleware.validateRPw, m.rpw);
 module.exports = router
