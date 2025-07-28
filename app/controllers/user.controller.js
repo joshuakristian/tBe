@@ -274,7 +274,7 @@ exports.login = (req, res, next) => {
       const lastFailed = moment(user.last_failed_login);
       const attempts = user.failed_attempts;
       
-      if (!user.verif) {
+      if (!user.verify) {
       return res.status(403).send({
         status: false,
         message: 'Please verify your email before logging in.',

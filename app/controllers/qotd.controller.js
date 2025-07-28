@@ -27,7 +27,7 @@ exports.getQotd = async (req, res, next) => {
 }
 
 exports.getQm = async (req, res, next) => {
-  const query = 'SELECT * FROM qm WHERE'
+  const query = 'SELECT * FROM qm'
   db.query(query, (err, results) => {
     if (err) {
       return res.status(500).json({
