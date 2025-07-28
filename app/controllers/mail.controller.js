@@ -192,7 +192,6 @@ exports.requestResetPassword = (req, res) => {
   });
 };
 
-// RESET PASSWORD (Tanpa cek token di DB)
 exports.resetPassword = async (req, res) => {
   const { token, newPassword } = req.body;
   
@@ -201,26 +200,23 @@ exports.resetPassword = async (req, res) => {
   }
 
   try {
-    // Decrypt token dari URL
+
     const decryptedData = decryptUserData(token);
     
     if (!decryptedData) {
       return res.status(400).json({ error: "Invalid reset link" });
     }
 
-    // Cek apakah link expired (10 menit)
     const now = Date.now();
     const tenMinutesInMillis = 10 * 60 * 1000;
     if (now - decryptedData.timestamp > tenMinutesInMillis) {
       return res.status(400).json({ error: "Reset link has expired" });
     }
 
-    // Hash password baru
     const bcrypt = require('bcryptjs');
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    // Update password di database
     connection.query(
       'UPDATE users SET password = ? WHERE id = ?',
       [hashedPassword, decryptedData.userId],
