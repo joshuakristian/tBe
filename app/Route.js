@@ -168,6 +168,6 @@ router.delete('/dbm/:id', userMiddleware.validateLogin, bm.delBmk)
 const m = require('./controllers/mail.controller.js')
 router.post('/sotp', m.sendOtp);
 router.post('/votp', m.verifyOtp);
-router.post('/rss', m.requestResetPassword);
+router.post('/rss', userMiddleware.validateRss, m.requestResetPassword);
 router.post('/reset-password', userMiddleware.validateRPw, m.rpw);
 module.exports = router

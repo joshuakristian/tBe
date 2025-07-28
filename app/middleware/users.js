@@ -23,6 +23,13 @@ function validateRegister(req, res, next) {
   validateRequest(req, res, next, schema)
 }
 
+function validateRss(req, res, next) {
+  const schema = Joi.object({
+    email: Joi.string().email().required(),
+  })
+  validateRequest(req, res, next, schema)
+}
+
 function validatePw(req, res, next) {
   const schema = Joi.object({
     old_password: Joi.string().required(),
@@ -209,6 +216,7 @@ module.exports.validateRegister = validateRegister
 module.exports.validateLogin = isLogin
 module.exports.validatePw = validatePw
 module.exports.validateRPw = rpw
+module.exports.validateRss = validateRss
 module.exports.validateNEvent = validateNE
 module.exports.validateNF = validateNForm
 module.exports.validateNDeals = validateND
