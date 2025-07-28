@@ -163,8 +163,6 @@ exports.uIntern = async (req, res, next) => {
   }
 };
 
-
-
 exports.delIntern = async (req, res, next) => {
   const internId = req.params.id
   try {
