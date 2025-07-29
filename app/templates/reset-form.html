@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Password - UntarX</title>
+  <style>
+    * { box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      max-width: 450px;
+      width: 100%;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px 30px;
+      text-align: center;
+      color: white;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 300;
+      letter-spacing: -0.5px;
+    }
+    
+    .header p {
+      margin: 8px 0 0 0;
+      opacity: 0.9;
+      font-size: 16px;
+    }
+    
+    .form-container {
+      padding: 40px 30px;
+    }
+    
+    .form-group {
+      margin-bottom: 25px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #2d3748;
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    input[type="password"] {
+      width: 100%;
+      padding: 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background-color: #f8fafc;
+    }
+    
+    input[type="password"]:focus {
+      outline: none;
+      border-color: #667eea;
+      background-color: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .password-requirements {
+      background-color: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+    }
+    
+    .password-requirements h4 {
+      margin: 0 0 10px 0;
+      color: #4a5568;
+      font-size: 14px;
+    }
+    
+    .password-requirements ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #718096;
+      font-size: 13px;
+    }
+    
+    .password-requirements li {
+      margin-bottom: 4px;
+    }
+    
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+    
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .security-note {
+      background-color: #edf2f7;
+      border-left: 4px solid #4299e1;
+      padding: 15px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 25px;
+    }
+    
+    .security-note p {
+      margin: 0;
+      color: #2d3748;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    
+    .timer {
+      text-align: center;
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #fff5f5;
+      border: 1px solid #feb2b2;
+      border-radius: 8px;
+      color: #c53030;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    .error-message {
+      background-color: #fed7d7;
+      border: 1px solid #feb2b2;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 20px;
+      color: #c53030;
+      font-size: 14px;
+      display: none;
+    }
+    
+    .success-message {
+      background-color: #c6f6d5;
+      border: 1px solid #9ae6b4;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 20px;
+      color: #2f855a;
+      font-size: 14px;
+      display: none;
+    }
+    
+    .password-strength {
+      margin-top: 8px;
+      height: 4px;
+      background-color: #e2e8f0;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    
+    .password-strength-bar {
+      height: 100%;
+      width: 0%;
+      transition: all 0.3s ease;
+      border-radius: 2px;
+    }
+    
+    .strength-weak { background-color: #f56565; width: 25%; }
+    .strength-fair { background-color: #ed8936; width: 50%; }
+    .strength-good { background-color: #38b2ac; width: 75%; }
+    .strength-strong { background-color: #48bb78; width: 100%; }
+    
+    .password-match {
+      font-size: 12px;
+      margin-top: 5px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: none;
+    }
+    
+    .password-match.match {
+      background-color: #c6f6d5;
+      color: #2f855a;
+      display: block;
+    }
+    
+    .password-match.no-match {
+      background-color: #fed7d7;
+      color: #c53030;
+      display: block;
+    }
+    
+    @media (max-width: 480px) {
+      body { padding: 20px 15px; }
+      .header { padding: 30px 20px; }
+      .form-container { padding: 30px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>UntarX</h1>
+      <p>Reset Your Password</p>
+    </div>
+    
+    <div class="form-container">
+      <div id="errorMessage" class="error-message"></div>
+      <div id="successMessage" class="success-message"></div>
+      
+      <form method="POST" action="/api/reset-password" id="resetForm">
+        <input type="hidden" name="token" value="{{TOKEN}}" />
+        
+        <div class="form-group">
+          <label for="newPassword">New Password</label>
+          <input type="password" id="newPassword" name="newPassword" required minlength="6" />
+          <div class="password-strength">
+            <div class="password-strength-bar" id="strengthBar"></div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="newPasswordRepeat">Confirm Password</label>
+          <input type="password" id="newPasswordRepeat" name="newPasswordRepeat" required minlength="6" />
+          <div class="password-match" id="passwordMatch"></div>
+        </div>
+        
+        <div class="password-requirements">
+          <h4>Password Requirements:</h4>
+          <ul>
+            <li>At least 6 characters long</li>
+            <li>Mix of uppercase and lowercase letters</li>
+            <li>At least one number</li>
+            <li>At least one special character</li>
+          </ul>
+        </div>
+        
+        <div class="timer">
+          ⏰ This reset link expires in 10 minutes
+        </div>
+        
+        <button type="submit" class="submit-btn" id="submitBtn">Reset Password</button>
+        
+        <div class="security-note">
+          <p><strong>Security Notice:</strong> After resetting your password, you'll be automatically logged out of all devices for security purposes.</p>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <script>
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmPasswordInput = document.getElementById('newPasswordRepeat');
+    const strengthBar = document.getElementById('strengthBar');
+    const passwordMatch = document.getElementById('passwordMatch');
+    const submitBtn = document.getElementById('submitBtn');
+    const errorMessage = document.getElementById('errorMessage');
+    const resetForm = document.getElementById('resetForm');
+    
+    // Password strength checker
+    function checkPasswordStrength(password) {
+      let strength = 0;
+      const checks = {
+        length: password.length >= 6,
+        lowercase: /[a-z]/.test(password),
+        uppercase: /[A-Z]/.test(password),
+        numbers: /\d/.test(password),
+        special: /[^A-Za-z0-9]/.test(password)
+      };
+      
+      strength = Object.values(checks).filter(Boolean).length;
+      
+      strengthBar.className = 'password-strength-bar';
+      if (strength >= 4) {
+        strengthBar.classList.add('strength-strong');
+      } else if (strength >= 3) {
+        strengthBar.classList.add('strength-good');
+      } else if (strength >= 2) {
+        strengthBar.classList.add('strength-fair');
+      } else if (strength >= 1) {
+        strengthBar.classList.add('strength-weak');
+      }
+      
+      return strength;
+    }
+    
+    // Password matching checker
+    function checkPasswordMatch() {
+      const password = newPasswordInput.value;
+      const confirmPassword = confirmPasswordInput.value;
+      
+      if (confirmPassword === '') {
+        passwordMatch.style.display = 'none';
+        return true;
+      }
+      
+      if (password === confirmPassword) {
+        passwordMatch.className = 'password-match match';
+        passwordMatch.textContent = '✓ Passwords match';
+        confirmPasswordInput.style.borderColor = '#48bb78';
+        confirmPasswordInput.style.backgroundColor = '#f0fff4';
+        return true;
+      } else {
+        passwordMatch.className = 'password-match no-match';
+        passwordMatch.textContent = '✗ Passwords do not match';
+        confirmPasswordInput.style.borderColor = '#f56565';
+        confirmPasswordInput.style.backgroundColor = '#fed7d7';
+        return false;
+      }
+    }
+    
+    // Show error message
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.style.display = 'block';
+      setTimeout(() => {
+        errorMessage.style.display = 'none';
+      }, 5000);
+    }
+    
+    // Event listeners
+    newPasswordInput.addEventListener('input', function() {
+      checkPasswordStrength(this.value);
+      if (confirmPasswordInput.value) {
+        checkPasswordMatch();
+      }
+    });
+    
+    confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+    
+    // Form submission
+    resetForm.addEventListener('submit', function(e) {
+      const password = newPasswordInput.value;
+      const confirmPassword = confirmPasswordInput.value;
+      
+      if (password !== confirmPassword) {
+        e.preventDefault();
+        showError('Passwords do not match. Please try again.');
+        return false;
+      }
+      
+      if (password.length < 6) {
+        e.preventDefault();
+        showError('Password must be at least 6 characters long.');
+        return false;
+      }
+      
+      const strength = checkPasswordStrength(password);
+      if (strength < 3) {
+        e.preventDefault();
+        showError('Please choose a stronger password that meets the requirements.');
+        return false;
+      }
+      
+      // Show loading state
+      submitBtn.innerHTML = 'Resetting Password...';
+      submitBtn.disabled = true;
+      
+      // Handle form submission via AJAX to show proper response
+      e.preventDefault();
+      
+      fetch('/api/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(new FormData(resetForm))
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.text();
+        } else {
+          return response.json().then(err => Promise.reject(err));
+        }
+      })
+      .then(html => {
+        // If response is HTML (success page), replace current page
+        document.open();
+        document.write(html);
+        document.close();
+      })
+      .catch(error => {
+        submitBtn.innerHTML = 'Reset Password';
+        submitBtn.disabled = false;
+        showError(error.error || 'An error occurred. Please try again.');
+      });
+    });
+    
+    // Auto-focus first input
+    document.addEventListener('DOMContentLoaded', function() {
+      newPasswordInput.focus();
+    });
+  </script>
+</body>
+</html>
