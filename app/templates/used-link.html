@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invalid Reset Link - UntarX</title>
+  <style>
+    * { box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      max-width: 500px;
+      width: 100%;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+      padding: 40px 30px;
+      text-align: center;
+      color: white;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 300;
+      letter-spacing: -0.5px;
+    }
+    
+    .header p {
+      margin: 8px 0 0 0;
+      opacity: 0.9;
+      font-size: 16px;
+    }
+    
+    .error-content {
+      padding: 40px 30px;
+      text-align: center;
+    }
+    
+    .error-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    
+    .error-content h2 {
+      color: #e53e3e;
+      margin: 0 0 15px 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    
+    .error-content p {
+      color: #4a5568;
+      margin: 0 0 30px 0;
+      line-height: 1.6;
+      font-size: 16px;
+    }
+    
+    .error-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 30px;
+    }
+    
+    .btn {
+      padding: 16px 24px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      text-align: center;
+      transition: all 0.3s ease;
+      font-size: 16px;
+      display: inline-block;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-secondary {
+      background: #f7fafc;
+      color: #4a5568;
+      border: 2px solid #e2e8f0;
+    }
+    
+    .btn-secondary:hover {
+      background: #edf2f7;
+      border-color: #cbd5e0;
+    }
+    
+    .troubleshoot-info {
+      background-color: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 25px;
+      text-align: left;
+    }
+    
+    .troubleshoot-info h4 {
+      margin: 0 0 15px 0;
+      color: #2d3748;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .troubleshoot-info ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #4a5568;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    .troubleshoot-info li {
+      margin-bottom: 8px;
+    }
+    
+    .footer {
+      background-color: #2d3748;
+      padding: 25px 30px;
+      text-align: center;
+    }
+    
+    .footer p {
+      margin: 0;
+      color: #a0aec0;
+      font-size: 14px;
+    }
+    
+    .footer p:last-child {
+      margin-top: 8px;
+      color: #718096;
+      font-size: 12px;
+    }
+    
+    @media (max-width: 480px) {
+      body { padding: 20px 15px; }
+      .header { padding: 30px 20px; }
+      .error-content { padding: 30px 20px; }
+      .footer { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>UntarX</h1>
+      <p>Reset Link Already Used</p>
+    </div>
+    
+    <div class="error-content">
+      <div class="error-icon">🔒</div>
+      <h2>Link Already Used</h2>
+      <p>This reset password link already Used. Please request a new link.</p>
+      <a href="/forgot-password">Request a new link</a>
+      
+      <div class="troubleshoot-info">
+        <h4>💡 Possible Reasons</h4>
+        <ul>
+          <li>The link was copied incorrectly or is incomplete</li>
+          <li>The link has already been used to reset your password</li>
+          <li>The link was tampered with or corrupted</li>
+          <li>You may have multiple reset requests - only the latest is valid</li>
+        </ul>
+      </div>
+      
+      <div class="error-actions">
+        <a href="/forgot-password" class="btn btn-primary">Request New Reset Link</a>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <p>© 2025 UntarX Team. All rights reserved.</p>
+      <p>Need help? Contact us at enterprise@untarx.com</p>
+    </div>
+  </div>
+</body>
+</html>

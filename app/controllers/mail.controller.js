@@ -276,7 +276,7 @@ exports.requestResetPassword = (req, res) => {
 
 exports.rpw = async (req, res) => {
   const { token, newPassword, newPasswordRepeat } = req.body;
-    
+
   if (!token || !newPassword) {
     return res.status(400).json({ error: "Token and password are required" });
   }
@@ -287,7 +287,6 @@ exports.rpw = async (req, res) => {
 
   try {
     const decryptedData = decryptUserData(token);
-    
     if (!decryptedData) {
       return res.status(400).json({ error: "Invalid reset link" });
     }
@@ -298,34 +297,61 @@ exports.rpw = async (req, res) => {
       return res.status(400).json({ error: "Reset link has expired" });
     }
 
-    const bcrypt = require('bcryptjs');
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
-
     connection.query(
-      'UPDATE users SET password = ? WHERE id = ?',
-      [hashedPassword, decryptedData.userId],
-      (err, result) => {
-        if (err) {
-          console.error("DB Error:", err);
+      'SELECT password_reset_token, password_reset_used FROM users WHERE id = ?',
+      [decryptedData.userId],
+      async (err, results) => {
+        if (err || results.length === 0) {
           return res.status(500).json({ error: "Database error" });
         }
 
-        if (result.affectedRows === 0) {
-          return res.status(404).json({ error: "User not found" });
+        const user = results[0];
+
+        if (user.password_reset_used) {
+          const errorTemplate = loadTemplate('used-link');
+          if (errorTemplate) {
+            return res.status(400).send(errorTemplate);
+          }
+          return res.status(400).json({ error: "This reset link has already been used" });
         }
 
-        // Load and send success template
-        const successTemplate = loadTemplate('reset-success');
-        if (successTemplate) {
-          res.status(200).send(successTemplate);
-        } else {
-          // Fallback if template loading fails
-          res.status(200).json({ 
-            success: true,
-            message: "Password has been reset successfully" 
-          });
+        const isValidToken = await bcrypt.compare(token, user.password_reset_token);
+        if (!isValidToken) {
+          const errorTemplate = loadTemplate('invalid-link');
+          if (errorTemplate) {
+            return res.status(400).send(errorTemplate);
+          }
+          return res.status(400).json({ error: "Invalid or expired reset link" });
         }
+
+        const bcrypt = require('bcryptjs');
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        connection.query(
+          'UPDATE users SET password = ?, password_reset_used = TRUE, password_reset_token = NULL WHERE id = ?',
+          [hashedPassword, decryptedData.userId],
+          (err, result) => {
+            if (err) {
+              console.error("DB Error:", err);
+              return res.status(500).json({ error: "Database error" });
+            }
+
+            if (result.affectedRows === 0) {
+              return res.status(404).json({ error: "User not found" });
+            }
+
+            const successTemplate = loadTemplate('reset-success');
+            if (successTemplate) {
+              res.status(200).send(successTemplate);
+            } else {
+              res.status(200).json({ 
+                success: true,
+                message: "Password has been reset successfully" 
+              });
+            }
+          }
+        );
       }
     );
 
@@ -340,48 +366,56 @@ exports.getResetPassword = (req, res) => {
 
   if (!token) {
     const errorTemplate = loadTemplate('invalid-link');
-    if (errorTemplate) {
-      return res.status(400).send(errorTemplate);
-    }
-    return res.status(400).json({ error: "Invalid reset link" });
+    return res.status(400).send(errorTemplate || { error: "Invalid reset link" });
   }
 
-  // Check if token is expired before showing the form
   try {
     const decryptedData = decryptUserData(token);
-    
     if (!decryptedData) {
       const errorTemplate = loadTemplate('invalid-link');
-      if (errorTemplate) {
-        return res.status(400).send(errorTemplate);
-      }
-      return res.status(400).json({ error: "Invalid reset link" });
+      return res.status(400).send(errorTemplate || { error: "Invalid reset link" });
     }
 
     const now = Date.now();
     const tenMinutesInMillis = 10 * 60 * 1000;
     if (now - decryptedData.timestamp > tenMinutesInMillis) {
       const expiredTemplate = loadTemplate('expired-link');
-      if (expiredTemplate) {
-        return res.status(400).send(expiredTemplate);
-      }
-      return res.status(400).json({ error: "Reset link has expired" });
+      return res.status(400).send(expiredTemplate || { error: "Link has expired" });
     }
+
+    connection.query(
+      'SELECT password_reset_token, password_reset_used FROM users WHERE id = ?',
+      [decryptedData.userId],
+      async (err, results) => {
+        if (err || results.length === 0) {
+          const errorTemplate = loadTemplate('invalid-link');
+          return res.status(400).send(errorTemplate || { error: "Invalid link" });
+        }
+
+        const user = results[0];
+
+        if (user.password_reset_used) {
+          const usedTemplate = loadTemplate('used-link');
+          return res.status(400).send(usedTemplate || { error: "This link has already been used" });
+        }
+
+        const isValidToken = await bcrypt.compare(token, user.password_reset_token);
+        if (!isValidToken) {
+          const errorTemplate = loadTemplate('invalid-link');
+          return res.status(400).send(errorTemplate || { error: "Invalid or used link" });
+        }
+
+        const resetFormTemplate = loadTemplate('reset-form');
+        if (resetFormTemplate) {
+          const populatedTemplate = resetFormTemplate.replace('{{TOKEN}}', token);
+          res.send(populatedTemplate);
+        } else {
+          res.status(500).json({ error: "Template loading error" });
+        }
+      }
+    );
   } catch (error) {
     const errorTemplate = loadTemplate('invalid-link');
-    if (errorTemplate) {
-      return res.status(400).send(errorTemplate);
-    }
-    return res.status(400).json({ error: "Invalid reset link" });
-  }
-
-  // Load and send reset form template
-  const resetFormTemplate = loadTemplate('reset-form');
-  if (resetFormTemplate) {
-    const populatedTemplate = resetFormTemplate.replace('{{TOKEN}}', token);
-    res.send(populatedTemplate);
-  } else {
-    // Fallback if template loading fails
-    res.status(500).json({ error: "Template loading error" });
+    return res.status(400).send(errorTemplate || { error: "Invalid reset link" });
   }
 };
