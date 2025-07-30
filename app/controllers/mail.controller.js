@@ -4,6 +4,7 @@ const config = require('../../config');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const bcrypt = require('bcryptjs');
 
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -200,7 +201,6 @@ const generateToken = () => {
   return crypto.randomBytes(32).toString('hex');
 };
 
-// Helper function to load HTML templates
 const loadTemplate = (templateName) => {
   try {
     const templatePath = path.join(__dirname, '../templates', `${templateName}.html`);
@@ -239,38 +239,49 @@ exports.requestResetPassword = (req, res) => {
       return res.status(500).json({ error: "Failed to generate reset link" });
     }
 
-    const resetLink = `${process.env.URL}/api/reset-password?token=${encodeURIComponent(encryptedToken)}`;
+    const hashedToken = await bcrypt.hash(encryptedToken, 10);
 
-    try {
-      await transporter.sendMail({
-        from: `"UntarX Team" <${config.mail.user}>`,
-        to: email,
-        subject: "Reset Your Password",
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #333;">Password Reset Request</h2>
-            <p>Hello,</p>
-            <p>You have requested to reset your password. Click the button below to proceed:</p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${resetLink}" 
-                style="background-color: #007bff; color: #fff; padding: 12px 24px; 
-                        text-decoration: none; border-radius: 6px; display: inline-block;">
-                Reset Password
-              </a>
-            </div>
-            <p>If the button above doesn't work, copy and paste this link into your browser:</p>
-            <p><a href="${resetLink}" style="color: #007bff;">${resetLink}</a></p>
-            <p><strong>This link will expire in 10 minutes.</strong></p>
-            <p>If you didn't request this, please ignore this email.</p>
-          </div>
-        `
-      });
+    connection.query(
+      'UPDATE users SET password_reset_token = ?, password_reset_used = FALSE WHERE id = ?',
+      [hashedToken, user.id],
+      async (err) => {
+        if (err) {
+          console.error("DB Save Token Error:", err);
+          return res.status(500).json({ error: "Failed to save reset token" });
+        }
 
-      res.status(200).json({ message: "Reset link sent successfully" });
-    } catch (error) {
-      console.error("Email Error:", error);
-      res.status(500).json({ error: "Failed to send reset link" });
-    }
+        const resetLink = `${process.env.URL}/api/reset-password?token=${encodeURIComponent(encryptedToken)}`;
+
+        try {
+          await transporter.sendMail({
+            from: `"UntarX Team" <${config.mail.user}>`,
+            to: email,
+            subject: "Reset Your Password",
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #333;">Password Reset Request</h2>
+                <p>Hello,</p>
+                <p>You have requested to reset your password. Click the button below to proceed:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="${resetLink}" 
+                    style="background-color: #007bff; color: #fff; padding: 12px 24px; 
+                            text-decoration: none; border-radius: 6px; display: inline-block;">
+                    Reset Password
+                  </a>
+                </div>
+                <p><strong>This link will expire in 10 minutes.</strong></p>
+                <p>If you didn't request this, please ignore this email.</p>
+              </div>
+            `
+          });
+
+          res.status(200).json({ message: "Reset link sent successfully" });
+        } catch (error) {
+          console.error("Email Error:", error);
+          res.status(500).json({ error: "Failed to send reset link" });
+        }
+      }
+    );
   });
 };
 
