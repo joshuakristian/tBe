@@ -4,6 +4,7 @@ const config = require('../../config');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const bcrypt = require('bcryptjs');
 
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -239,7 +240,6 @@ exports.requestResetPassword = (req, res) => {
       return res.status(500).json({ error: "Failed to generate reset link" });
     }
 
-    const bcrypt = require('bcryptjs');
     const hashedToken = await bcrypt.hash(encryptedToken, 10);
 
     connection.query(
@@ -336,7 +336,7 @@ exports.rpw = async (req, res) => {
           return res.status(400).json({ error: "Invalid or expired reset link" });
         }
 
-        const bcrypt = require('bcryptjs');
+
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
