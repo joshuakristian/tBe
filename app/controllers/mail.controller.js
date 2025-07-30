@@ -4,7 +4,6 @@ const config = require('../../config');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const bcrypt = require('bcryptjs');
 
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -201,6 +200,7 @@ const generateToken = () => {
   return crypto.randomBytes(32).toString('hex');
 };
 
+// Helper function to load HTML templates
 const loadTemplate = (templateName) => {
   try {
     const templatePath = path.join(__dirname, '../templates', `${templateName}.html`);
@@ -239,6 +239,7 @@ exports.requestResetPassword = (req, res) => {
       return res.status(500).json({ error: "Failed to generate reset link" });
     }
 
+    const bcrypt = require('bcryptjs');
     const hashedToken = await bcrypt.hash(encryptedToken, 10);
 
     connection.query(
