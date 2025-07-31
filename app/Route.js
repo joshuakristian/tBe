@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const upMidware = require('./middleware/upload.js')
+const formUploadMiddleware = require('./middleware/formUpload.js')
 
 //users
 const users = require('./controllers/user.controller.js')
@@ -75,10 +76,10 @@ router.post(
 router.delete('/dfrms/:id', userMiddleware.validateLogin, userMiddleware.validateNF, form.dForm);
 
 // event responses
-router.get('/grsp/:formId', userMiddleware.validateLogin, form.getResponses); 
-router.get('/ggrsp/:formId', userMiddleware.validateLogin, userMiddleware.validateNR, form.getResponse);
-router.post('/irsp/:formId', userMiddleware.validateLogin, upMidware, userMiddleware.validateNR, form.newRespond);
-router.delete('/drsp/:id', userMiddleware.validateLogin, userMiddleware.validateNR, form.deleteResponse );
+router.get('/grsp/:formId', form.getResponses); 
+// router.get('/ggrsp/:formId', userMiddleware.validateNR, form.getResponse);
+router.post('/irsp/:formId', userMiddleware.validateLogin, formUploadMiddleware, userMiddleware.validateNR, form.newRespond);
+router.delete('/drsp/:id', userMiddleware.validateLogin, userMiddleware.validateNR, form.deleteResponse);
 
 //deals
 const deals = require('./controllers/deals.controller.js')

@@ -197,13 +197,58 @@ exports.dForm = async (req, res, next) => {
   }
 }
 
-exports.getResponses = async (req, res, next) => {
-  const formId = req.params.formId;
+// exports.getResponse = async (req, res, next) => {
+//   const { formId, responseId } = req.params;
 
-  try {
+//   try {
+//     const [formRows] = await db
+//       .promise()
+//       .query('SELECT id FROM e_form WHERE id = ?', [formId]);
+
+//     if (formRows.length === 0) {
+//       return res.status(404).json({ 
+//         status: false, 
+//         message: 'Form Not Found' 
+//       });
+//     }
+
+//     const [responses] = await db
+//       .promise()
+//       .query('SELECT * FROM f_responses WHERE id = ? AND formId = ?', [responseId, formId]);
+
+//     if (responses.length === 0) {
+//       return res.status(404).json({ 
+//         status: false, 
+//         message: 'Response Not Found' 
+//       });
+//     }
+
+//     const response = responses[0];
+//     try {
+//       response.answers = JSON.parse(response.answers);
+//     } catch (e) {
+//       response.answers = { textAnswers: {}, fileAnswers: {} };
+//     }
+
+//     return res.status(200).json({
+//       status: true,
+//       message: 'Response retrieved successfully',
+//       data: response
+//     });
+
+//   } catch (err) {
+//     return res.status(500).json({
+//       status: false,
+//       message: err.message,
+//     });
+//   }
+// };
+
+exports.getResponses = async (req, res) => {
+    const formId = req.params.formId;
     const [formRows] = await db
-      .promise()
-      .query('SELECT id FROM e_form WHERE id = ?', [formId]);
+    .promise()
+    .query('SELECT id FROM e_form WHERE id = ?', [formId]);
 
     if (formRows.length === 0) {
       return res.status(404).json({ 
@@ -211,59 +256,94 @@ exports.getResponses = async (req, res, next) => {
         message: 'Form Not Found' 
       });
     }
-
-    const [responses] = await db
+    
+   try {
+    const [rows] = await db
       .promise()
       .query('SELECT * FROM f_responses WHERE formId = ? ORDER BY submittedAt DESC', [formId]);
     
-      console.log(responses);
+    const parsedRows = rows.map(row => {
+      let parsedAnswers;
+      try {
+        parsedAnswers = typeof row.answers === 'string'
+          ? JSON.parse(row.answers)
+          : row.answers;
+      } catch (err) {
+        parsedAnswers = {};
+      }
 
-    const parsedResponses = responses.map(response => ({
-      ...response,
-      answers: typeof response.answers === 'string' ? JSON.parse(response.answers) : response.answers
-    }));
-
-    return res.status(200).json({
-      status: true,
-      message: 'Responses retrieved successfully',
-      data: parsedResponses
+      return {
+        ...row,
+        answers: parsedAnswers,
+      };
     });
 
-  } catch (err) {
-    return res.status(500).json({
-      status: false,
-      message: err.message,
-    });
+    res.json({ status: true, data: parsedRows });
+  } catch (error) {
+    res.status(500).json({ status: false, message: error.message });
   }
 };
+
 
 exports.getResponse = async (req, res, next) => {
   const { formId, responseId } = req.params;
 
   try {
+    // Cek apakah form ada
     const [formRows] = await db
       .promise()
       .query('SELECT id FROM e_form WHERE id = ?', [formId]);
 
     if (formRows.length === 0) {
-      return res.status(404).json({ 
-        status: false, 
-        message: 'Form Not Found' 
+      return res.status(404).json({
+        status: false,
+        message: 'Form Not Found'
       });
     }
 
-    const [responses] = await db
+    // Ambil data response
+    const [rows] = await db
       .promise()
-      .query('SELECT * FROM responses WHERE id = ? AND formId = ?', [responseId, formId]);
+      .query('SELECT * FROM f_responses WHERE id = ? AND formId = ?', [responseId, formId]);
 
-    if (responses.length === 0) {
-      return res.status(404).json({ 
-        status: false, 
-        message: 'Response Not Found' 
+    if (rows.length === 0) {
+      return res.status(404).json({
+        status: false,
+        message: 'Response Not Found'
       });
     }
-    const response = responses[0];
-    response.answers = typeof response.answers === 'string' ? JSON.parse(response.answers) : response.answers;
+
+    const response = rows[0];
+
+    try {
+      const parsedAnswers = JSON.parse(response.answers);
+
+      // Pastikan strukturnya lengkap
+      const textAnswers = parsedAnswers.textAnswers || {};
+      const fileAnswers = parsedAnswers.fileAnswers || {};
+
+      // Parsing individual value jika string-nya adalah JSON string
+      for (const [key, value] of Object.entries(textAnswers)) {
+        if (typeof value === 'string' && value.trim().startsWith('[') && value.trim().endsWith(']')) {
+          try {
+            textAnswers[key] = JSON.parse(value);
+          } catch (_) {
+            // Skip jika gagal parsing
+          }
+        }
+      }
+
+      response.answers = {
+        textAnswers,
+        fileAnswers
+      };
+    } catch (e) {
+      // Kalau parsing gagal, kosongkan jawaban
+      response.answers = {
+        textAnswers: {},
+        fileAnswers: {}
+      };
+    }
 
     return res.status(200).json({
       status: true,
@@ -278,6 +358,7 @@ exports.getResponse = async (req, res, next) => {
     });
   }
 };
+
 
 exports.deleteResponse = async (req, res, next) => {
   const { formId, responseId } = req.params;
@@ -332,17 +413,15 @@ const hasUserAlreadyResponded = async (formId, userId) => {
 
 exports.newRespond = async (req, res, next) => {
   const formId = req.params.formId;
-
   const [rows] = await db
     .promise()
     .query('SELECT id FROM e_form WHERE id = ?', [formId]);
-
+  
   if (rows.length === 0) {
     return res.status(404).json({ status: false, message: 'Form Not Found' });
   }
 
   const { eventId, userId, answers } = req.body;
-
   const exists = await hasUserAlreadyResponded(formId, userId);
   if (exists) {
     return res.status(400).json({
@@ -351,11 +430,38 @@ exports.newRespond = async (req, res, next) => {
     });
   }
 
+  let fileAnswers = {};
+  if (req.files && Object.keys(req.files).length > 0) {
+    for (const fieldName in req.files) {
+      const file = req.files[fieldName][0];
+      fileAnswers[fieldName] = {
+        filename: file.filename,
+        originalName: file.originalname,
+        path: file.path,
+        size: file.size,
+        mimetype: file.mimetype
+      };
+    }
+  }
+
+    let parsedAnswers = {};
+    try {
+      parsedAnswers = JSON.parse(answers);
+    } catch (e) {
+      parsedAnswers = {};
+    }
+
+
+  const combinedAnswers = {
+    textAnswers: parsedAnswers,
+    fileAnswers: fileAnswers
+  };
+
   const query = `
     INSERT INTO f_responses (formId, eventId, userId, answers, submittedAt)
     VALUES (?, ?, ?, ?, NOW())
   `;
-  const vquery = [formId, eventId, userId, JSON.stringify(answers)];
+  const vquery = [formId, eventId, userId, JSON.stringify(combinedAnswers)];
 
   try {
     const [result] = await db.promise().query(query, vquery);
@@ -368,7 +474,7 @@ exports.newRespond = async (req, res, next) => {
         formId,
         eventId,
         userId,
-        answers,
+        answers: combinedAnswers,
       }
     });
   } catch (err) {
