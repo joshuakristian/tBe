@@ -215,7 +215,7 @@
       </div>
       
       <div class="error-actions">
-        <a href="/forgot-password" class="btn btn-primary">Request New Reset Link</a>
+        <button type="button" id="requestNewLink" class="btn btn-primary">Request New Reset Link</button>
       </div>
     </div>
     
@@ -224,5 +224,61 @@
       <p>Need help? Contact us at enterprise@untarx.com</p>
     </div>
   </div>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    document.getElementById('requestNewLink').addEventListener('click', async () => {
+      const { value: email } = await Swal.fire({
+        title: 'Request New Reset Link',
+        text: 'Enter your email to receive a new password reset link.',
+        icon: 'info',
+        input: 'email',
+        inputLabel: 'Email Address',
+        inputPlaceholder: 'you@example.com',
+        showCancelButton: true,
+        confirmButtonText: 'Send Link',
+        cancelButtonText: 'Cancel',
+        inputValidator: (value) => {
+          if (!value) {
+            return 'Please enter your email address!';
+          }
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(value)) {
+            return 'Please enter a valid email!';
+          }
+          return null;
+        },
+        showLoaderOnConfirm: true,
+        preConfirm: async (email) => {
+          try {
+            const response = await fetch('/api/rss', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ email })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+              throw new Error(data.error || 'Failed to send link');
+            }
+            return data;
+          } catch (error) {
+            Swal.showValidationMessage(`Error: ${error.message}`);
+          }
+        }
+      });
+
+      if (email) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Link Sent!',
+          text: 'If your email is registered, you will receive a reset link shortly.',
+          confirmButtonText: 'OK'
+        });
+      }
+    });
+  </script>
 </body>
 </html>
