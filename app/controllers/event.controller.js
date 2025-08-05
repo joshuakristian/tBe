@@ -235,3 +235,29 @@ exports.delEvent = async (req, res, next) => {
     })
   }
 }
+
+  exports.gEvtU = async (req, res, next) => {
+    const { userId, formId, eventId } = req.params
+    const query = 'SELECT * FROM f_responses WHERE userId = ? && formId = ? && eventId = ?'
+    db.query(query,[userId, formId, eventId], (err, results) => {
+      if (err) {
+        return res.status(500).json({
+          status: false,
+          message: 'Terjadi kesalahan pada server',
+          error: err.message,
+        })
+      }
+      if (results.length === 0) {
+        return res.status(404).json({
+          status: false,
+          message: 'Cannot Find Registered Event Data',
+        })
+      }
+      const hist = results
+      return res.status(200).json({
+        status: true,
+        message: 'You have registered to this event',
+        data : hist,
+      })
+    })
+  }

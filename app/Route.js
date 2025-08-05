@@ -28,6 +28,7 @@ const event = require('./controllers/event.controller.js')
 router.get('/gevtss', event.getevents)
 router.get('/gevts', userMiddleware.validateLogin, event.getevents)
 router.get('/gevt/:id', userMiddleware.validateLogin, event.getevent)
+router.get('/gEvRs/:userId/:formId/:eventId', userMiddleware.validateLogin, event.gEvtU)
 router.post(
   '/ievt',
   userMiddleware.validateLogin,
