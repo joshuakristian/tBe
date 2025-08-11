@@ -12,7 +12,7 @@ exports.getinterns = async (req, res, next) => {
   const {
     query: { search, currentPage, pageSize },
   } = req
-  const keyword = search ? `%${search}%` : search
+  const keyword = search ? `%${search}%`: search
   let limit = Number(pageSize) || 10
   let current_Page = currentPage || 1
   let offset = current_Page - 1
@@ -31,7 +31,7 @@ exports.getinterns = async (req, res, next) => {
   }
   const PageCount = await GetPageCount()
   let query = `
-    SELECT id,judul, jabatan, perusahaan,detailPerusahaan, deskripsiPekerjaan,  tgl_m,tgl_a,jam_m,jam_a,lokasi,tgjwb,fslts,image,dibuat FROM internship`
+    SELECT id, judul, jabatan, perusahaan, detailPerusahaan, deskripsiPekerjaan, tgl_m, tgl_a, jam_m, jam_a, lokasi, tgjwb, fslts, image, dibuat, link FROM internship`
   if (keyword) {
     query += `AND (judul LIKE :keyword OR code LIKE :keyword `
     query += `OR perusahaan LIKE :keyword) `
@@ -61,7 +61,7 @@ exports.getinterns = async (req, res, next) => {
 exports.getintern = async (req, res, next) => {
   const internId = req.params.id
   const query =
-    'SELECT id,judul, jabatan, perusahaan, detailPerusahaan, deskripsiPekerjaan, tgl_m,tgl_a,jam_m,jam_a,lokasi,tgjwb,fslts,image,dibuat FROM internship WHERE id = ?'
+    'SELECT id, judul, jabatan, perusahaan, detailPerusahaan, deskripsiPekerjaan, tgl_m, tgl_a, jam_m, jam_a, lokasi, tgjwb, fslts, image, dibuat, link FROM internship WHERE id = ?'
   db.query(query, [internId], (err, results) => {
     if (err) {
       return res.status(500).json({
@@ -94,12 +94,12 @@ exports.newIntern = async (req, res, next) => {
     })
   }
 
-  const { judul, jabatan, perusahaan, detailPerusahaan, deskripsiPekerjaan, tgl_m,tgl_a,jam_m,jam_a,lokasi } = req.body
+  const { judul, jabatan, perusahaan, detailPerusahaan, deskripsiPekerjaan, tgl_m, tgl_a, jam_m, jam_a, lokasi, link } = req.body
 
   let intern = req.files.intern ? `/internpic/${req.files.intern[0].filename}` : null
 
-  const query = `INSERT INTO internship (judul, jabatan, perusahaan, detailPerusahaan, deskripsiPekerjaan,tgl_m,tgl_a,jam_m,jam_a,lokasi,tgjwb,fslts ,image, dibuat) VALUES (?, ? , ? , ? , ?, ?, ?, ?, ?, ?, ?, ?,?, now())`
-  const vquery = [judul, jabatan, perusahaan, detailPerusahaan, deskripsiPekerjaan,tgl_m,tgl_a,jam_m,jam_a,lokasi,intern]
+  const query = `INSERT INTO internship (judul, jabatan, perusahaan, detailPerusahaan, deskripsiPekerjaan, tgl_m, tgl_a, jam_m, jam_a, lokasi, tgjwb, fslts, image, dibuat, link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now(), ?)`
+  const vquery = [judul, jabatan, perusahaan, detailPerusahaan, deskripsiPekerjaan, tgl_m, tgl_a, jam_m, jam_a, lokasi, link]
 
   db.query(query, vquery, (err, result) => {
     if (err) {
@@ -117,11 +117,10 @@ exports.newIntern = async (req, res, next) => {
 }
 
 exports.uIntern = async (req, res, next) => {
-  const { judul, jabatan, perusahaan, detailPerusahaan, deskripsiPekerjaan, tgl_m, tgl_a, jam_m, jam_a, lokasi , tgjwb,fslts } = req.body;
+  const { judul, jabatan, perusahaan, detailPerusahaan, deskripsiPekerjaan, tgl_m, tgl_a, jam_m, jam_a, lokasi , tgjwb, fslts, link } = req.body;
   const internId = req.params.id;
 
   try {
-
     const [rows] = await db.promise().query('SELECT id FROM internship WHERE id = ?', [internId]);
 
     if (rows.length === 0) {
@@ -138,14 +137,20 @@ exports.uIntern = async (req, res, next) => {
       const internImage = `/internpic/${req.files.intern[0].filename}`;
       query = `
         UPDATE internship SET 
-        judul = ?, jabatan = ?, perusahaan = ?, detailPerusahaan = ? , deskripsiPekerjaan = ?, tgl_m = ?, tgl_a = ?, jam_m = ?, jam_a = ?, lokasi = ?, tgjwb = ? ,fslts = ?, image = ? WHERE id = ?`;
-      params = [judul, jabatan, perusahaan, detailPerusahaan, deskripsiPekerjaan, tgl_m, tgl_a, jam_m, jam_a, lokasi , tgjwb, fslts, internImage, internId];
+        judul = ?, jabatan = ?, perusahaan = ?, detailPerusahaan = ?, deskripsiPekerjaan = ?, 
+        tgl_m = ?, tgl_a = ?, jam_m = ?, jam_a = ?, lokasi = ?, tgjwb = ?, fslts = ?, image = ?, link = ?
+        WHERE id = ?`;
+      params = [judul, jabatan, perusahaan, detailPerusahaan, deskripsiPekerjaan, tgl_m, tgl_a, jam_m, jam_a, lokasi, tgjwb, fslts, internImage, link, internId];
     } else {
       query = `
         UPDATE internship SET 
-        judul = ?, jabatan = ?, perusahaan = ?, detailPerusahaan = ? , deskripsiPekerjaan = ?, tgl_m = ?, tgl_a = ?, jam_m = ?, jam_a = ?, lokasi = ? WHERE id = ?`;
-      params = [judul, jabatan, perusahaan, detailPerusahaan, deskripsiPekerjaan,tgl_m, tgl_a, jam_m, jam_a, lokasi , tgjwb,fslts, internId];
+        judul = ?, jabatan = ?, perusahaan = ?, detailPerusahaan = ?, deskripsiPekerjaan = ?, 
+        tgl_m = ?, tgl_a = ?, jam_m = ?, jam_a = ?, lokasi = ?, tgjwb = ?, fslts = ?, link = ?
+        WHERE id = ?`;
+      params = [judul, jabatan, perusahaan, detailPerusahaan, deskripsiPekerjaan, tgl_m, tgl_a, jam_m, jam_a, lokasi, tgjwb, fslts, link, internId];
     }
+
+    console.log(params)
 
     await db.promise().query(query, params);
 

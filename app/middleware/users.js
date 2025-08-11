@@ -8,7 +8,7 @@ function validateRegister(req, res, next) {
     fakultas: Joi.string().required(),
     prodi: Joi.string().required(),
     first_name: Joi.string().required(),
-    last_name: Joi.string().required(),
+    last_name: Joi.string().allow('', null),
     email: Joi.string().email().required(),
     password: Joi.string()
       .required()
@@ -167,11 +167,14 @@ function validateRegistIntern(req, res, next) {
     tgl_m: Joi.date().required(),
     tgl_a: Joi.date().greater('now').required(),
     jam_m: Joi.string()
-      .regex(/^([0-9]{2})\:([0-9]{2})$/)
+      .regex(/^([0-9]{2}):([0-9]{2}):([0-9]{2})$/)
       .required(),
     jam_a: Joi.string()
-      .regex(/^([0-9]{2})\:([0-9]{2})$/)
+      .regex(/^([0-9]{2}):([0-9]{2}):([0-9]{2})$/)
       .required(),
+    tgjwb: Joi.string().required(),
+    fslts: Joi.string().required(),
+    link: Joi.string().required(),
     lokasi: Joi.string().required(),
   })
   validateRequest(req, res, next, schema)
@@ -186,12 +189,15 @@ function validateEditIntern(req, res, next) {
     tgl_m: Joi.date().required(),
     tgl_a: Joi.date().required(),
     jam_m: Joi.string()
-      .regex(/^([0-9]{2})\:([0-9]{2})$/)
+      .regex(/^([0-9]{2}):([0-9]{2}):([0-9]{2})$/)
       .required(),
     jam_a: Joi.string()
-      .regex(/^([0-9]{2})\:([0-9]{2})$/)
+      .regex(/^([0-9]{2}):([0-9]{2}):([0-9]{2})$/)
       .required(),
+    tgjwb: Joi.string().required(),
+    fslts: Joi.string().required(),
     lokasi: Joi.string().required(),
+    link: Joi.string().required()
   })
   validateRequest(req, res, next, schema)
 }
